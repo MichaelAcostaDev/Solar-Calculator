@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculadora Científica</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #e8dcc8 0%,
+          #d9cec4 50%,
+          #e5d9d1 100%
+        );
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding-top: 20px;
+        overflow: hidden;
+      }
+
+      .sun-container {
+        position: fixed;
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        cursor: pointer;
+        z-index: 1000;
+        animation: float 3s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateX(-50%) translateY(0px);
+        }
+        50% {
+          transform: translateX(-50%) translateY(-20px);
+        }
+      }
+
+      .sun {
+        position: relative;
+        width: 80px;
+        height: 80px;
+      }
+
+      .sun-core {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+          circle at 30% 30%,
+          #f4d35e,
+          #f4a460,
+          #e88c5f
+        );
+        border-radius: 50%;
+        box-shadow:
+          0 0 25px rgba(244, 165, 96, 0.5),
+          0 0 50px rgba(244, 211, 94, 0.3);
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow:
+            0 0 25px rgba(244, 165, 96, 0.5),
+            0 0 50px rgba(244, 211, 94, 0.3);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow:
+            0 0 35px rgba(244, 165, 96, 0.6),
+            0 0 60px rgba(244, 211, 94, 0.4);
+        }
+      }
+
+      .sun-rays {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+      }
+
+      .ray {
+        position: absolute;
+        width: 8px;
+        height: 25px;
+        background: linear-gradient(to bottom, #f4d35e, transparent);
+        left: 50%;
+        transform-origin: center 40px;
+        margin-left: -4px;
+        border-radius: 50%;
+        animation: rotate 20s linear infinite;
+      }
+
+      @keyframes rotate {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .ray:nth-child(1) {
+        top: -15px;
+        transform: rotate(0deg);
+      }
+      .ray:nth-child(2) {
+        top: -15px;
+        transform: rotate(45deg);
+      }
+      .ray:nth-child(3) {
+        top: -15px;
+        transform: rotate(90deg);
+      }
+      .ray:nth-child(4) {
+        top: -15px;
+        transform: rotate(135deg);
+      }
+      .ray:nth-child(5) {
+        top: -15px;
+        transform: rotate(180deg);
+      }
+      .ray:nth-child(6) {
+        top: -15px;
+        transform: rotate(225deg);
+      }
+      .ray:nth-child(7) {
+        top: -15px;
+        transform: rotate(270deg);
+      }
+      .ray:nth-child(8) {
+        top: -15px;
+        transform: rotate(315deg);
+      }
+
+      .calculator-wrapper {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 1;
+        visibility: visible;
+        transition:
+          opacity 0.6s ease,
+          visibility 0.6s ease;
+        z-index: 999;
+        cursor: grab;
+        user-select: none;
+      }
+
+      .calculator-wrapper:active {
+        cursor: grabbing;
+      }
+
+      .calculator-wrapper.hidden {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      .calculator {
+        background: linear-gradient(
+          135deg,
+          #fef5e7 0%,
+          #faf0e6 50%,
+          #f5e6d3 100%
+        );
+        border-radius: 40px;
+        padding: 30px;
+        box-shadow:
+          0 10px 40px rgba(139, 90, 43, 0.2),
+          0 5px 15px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 500px;
+        border: 1px solid rgba(139, 90, 43, 0.15);
+      }
+
+      .display-container {
+        margin-bottom: 20px;
+        background: #faf5f0;
+        border-radius: 20px;
+        padding: 20px;
+        border: 1px solid rgba(139, 90, 43, 0.2);
+        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+
+      .previous-display {
+        text-align: right;
+        font-size: 12px;
+        color: #a0826d;
+        min-height: 20px;
+        margin-bottom: 5px;
+        font-weight: 300;
+      }
+
+      .display {
+        text-align: right;
+        font-size: 32px;
+        color: #5a4a3a;
+        min-height: 45px;
+        word-wrap: break-word;
+        word-break: break-all;
+        font-weight: 600;
+      }
+
+      .buttons-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+        margin-bottom: 15px;
+      }
+
+      button {
+        padding: 15px;
+        font-size: 14px;
+        border: 1px solid rgba(139, 90, 43, 0.2);
+        border-radius: 15px;
+        background: linear-gradient(135deg, #ffffff, #f9f6f3);
+        color: #5a4a3a;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      button:hover {
+        background: linear-gradient(135deg, #f4d35e, #f4a460);
+        border-color: rgba(139, 90, 43, 0.4);
+        box-shadow: 0 4px 12px rgba(244, 165, 96, 0.3);
+        transform: translateY(-2px);
+      }
+
+      button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(139, 90, 43, 0.15);
+      }
+
+      .operator {
+        background: linear-gradient(135deg, #f4d35e, #f4a460);
+        border-color: rgba(244, 165, 96, 0.3);
+        color: #6b5344;
+      }
+
+      .operator:hover {
+        background: linear-gradient(135deg, #e8c552, #e89450);
+        box-shadow: 0 4px 12px rgba(244, 165, 96, 0.3);
+      }
+
+      .equals {
+        background: linear-gradient(135deg, #8ec89a, #7ab88a);
+        border-color: rgba(142, 200, 154, 0.4);
+        color: #ffffff;
+        grid-column: span 2;
+      }
+
+      .equals:hover {
+        background: linear-gradient(135deg, #7ab88a, #68a87a);
+        box-shadow: 0 4px 12px rgba(142, 200, 154, 0.3);
+      }
+
+      .clear {
+        background: linear-gradient(135deg, #d97f6e, #c86d61);
+        border-color: rgba(217, 127, 110, 0.3);
+        color: #ffffff;
+      }
+
+      .clear:hover {
+        background: linear-gradient(135deg, #c86d61, #b85a4f);
+        box-shadow: 0 4px 12px rgba(217, 127, 110, 0.3);
+      }
+
+      .scientific-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid rgba(139, 90, 43, 0.15);
+      }
+
+      .scientific-grid button {
+        font-size: 12px;
+        padding: 12px;
+        background: linear-gradient(135deg, #e8d9cc, #dfd0c3);
+        color: #6b5344;
+      }
+
+      .scientific-grid button:hover {
+        background: linear-gradient(135deg, #f4d35e, #f4a460);
+        box-shadow: 0 4px 12px rgba(244, 165, 96, 0.2);
+      }
+
+      .title {
+        text-align: center;
+        color: #6b5344;
+        margin-bottom: 20px;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: 2px;
+      }
+
+      .info-text {
+        text-align: center;
+        color: #a0826d;
+        font-size: 12px;
+        margin-top: 15px;
+      }
+
+      @media (max-width: 600px) {
+        .calculator {
+          padding: 20px;
+        }
+
+        .display {
+          font-size: 24px;
+        }
+
+        button {
+          padding: 12px;
+          font-size: 12px;
+        }
+
+        .title {
+          font-size: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sun-container" id="sunContainer">
+      <div class="sun">
+        <div class="sun-rays">
+          <div class="ray"></div>
+          <div class="ray"></div>
+          <div class="ray"></div>
+          <div class="ray"></div>
+          <div class="ray"></div>
+          <div class="ray"></div>
+          <div class="ray"></div>
+          <div class="ray"></div>
+        </div>
+        <div class="sun-core"></div>
+      </div>
+    </div>
+
+    <div class="calculator-wrapper" id="calculatorWrapper">
+      <div class="calculator">
+        <div class="title">☀️ Solar Calculator ☀️</div>
+
+        <div class="display-container">
+          <div class="previous-display" id="previousDisplay"></div>
+          <div class="display" id="currentDisplay">0</div>
+        </div>
+
+        <div class="buttons-grid">
+          <button class="clear" onclick="clearDisplay()">AC</button>
+          <button class="operator" onclick="toggleSign()">+/-</button>
+          <button class="operator" onclick="appendToDisplay('%')">%</button>
+          <button class="operator" onclick="appendToDisplay('/')">÷</button>
+          <button class="operator" onclick="deleteLast()">←</button>
+
+          <button onclick="appendToDisplay('7')">7</button>
+          <button onclick="appendToDisplay('8')">8</button>
+          <button onclick="appendToDisplay('9')">9</button>
+          <button class="operator" onclick="appendToDisplay('*')">×</button>
+          <button class="operator" onclick="appendToDisplay('(')">( )</button>
+
+          <button onclick="appendToDisplay('4')">4</button>
+          <button onclick="appendToDisplay('5')">5</button>
+          <button onclick="appendToDisplay('6')">6</button>
+          <button class="operator" onclick="appendToDisplay('-')">−</button>
+          <button class="operator" onclick="appendToDisplay('^')">x^y</button>
+
+          <button onclick="appendToDisplay('1')">1</button>
+          <button onclick="appendToDisplay('2')">2</button>
+          <button onclick="appendToDisplay('3')">3</button>
+          <button class="operator" onclick="appendToDisplay('+')">+</button>
+          <button class="operator" onclick="appendToDisplay('.')">.</button>
+
+          <button onclick="appendToDisplay('0')" style="grid-column: span 2">
+            0
+          </button>
+          <button class="operator" onclick="openParenthesis()">( )</button>
+          <button class="equals" onclick="calculate()">=</button>
+        </div>
+
+        <div class="scientific-grid">
+          <button onclick="scientificFunction('sin')">sin</button>
+          <button onclick="scientificFunction('cos')">cos</button>
+          <button onclick="scientificFunction('tan')">tan</button>
+          <button onclick="scientificFunction('log')">log</button>
+          <button onclick="scientificFunction('ln')">ln</button>
+
+          <button onclick="scientificFunction('sqrt')">√</button>
+          <button onclick="scientificFunction('cbrt')">∛</button>
+          <button onclick="scientificFunction('abs')">|x|</button>
+          <button onclick="scientificFunction('factorial')">n!</button>
+          <button onclick="appendToDisplay('π')">π</button>
+
+          <button onclick="scientificFunction('asin')">asin</button>
+          <button onclick="scientificFunction('acos')">acos</button>
+          <button onclick="scientificFunction('atan')">atan</button>
+          <button onclick="scientificFunction('exp')">e^x</button>
+          <button onclick="appendToDisplay('e')">e</button>
+        </div>
+
+        <!-- <div class="info-text">Calculadora Científica Futurista ☀️</div> -->
+      </div>
+    </div>
+
+    <script>
+      let display = "0";
+      let previousValue = "";
+      let operation = null;
+      let shouldResetDisplay = false;
+
+      const displayElement = document.getElementById("currentDisplay");
+      const previousDisplayElement = document.getElementById("previousDisplay");
+      const calculatorWrapper = document.getElementById("calculatorWrapper");
+      const sunContainer = document.getElementById("sunContainer");
+
+      // Drag functionality
+      let isDragging = false;
+      let startX = 0;
+      let currentX = 0;
+
+      calculatorWrapper.addEventListener("mousedown", function (e) {
+        isDragging = true;
+        startX = e.clientX - currentX;
+        calculatorWrapper.style.cursor = "grabbing";
+      });
+
+      document.addEventListener("mousemove", function (e) {
+        if (isDragging) {
+          currentX = e.clientX - startX;
+          calculatorWrapper.style.transform = `translate(calc(-50% + ${currentX}px), -50%)`;
+        }
+      });
+
+      document.addEventListener("mouseup", function () {
+        isDragging = false;
+        calculatorWrapper.style.cursor = "grab";
+      });
+
+      // Toggle calculator visibility with sun
+      sunContainer.addEventListener("click", function () {
+        calculatorWrapper.classList.toggle("hidden");
+      });
+
+      function updateDisplay() {
+        displayElement.textContent = display;
+      }
+
+      function appendToDisplay(value) {
+        if (shouldResetDisplay && !isOperator(value)) {
+          display = "";
+          shouldResetDisplay = false;
+        }
+
+        // Handle special values
+        if (value === "π") {
+          if (display === "0") display = Math.PI.toString();
+          else display += Math.PI.toString();
+          updateDisplay();
+          return;
+        }
+
+        if (value === "e") {
+          if (display === "0") display = Math.E.toString();
+          else display += Math.E.toString();
+          updateDisplay();
+          return;
+        }
+
+        // Handle operators
+        if (isOperator(value)) {
+          if (display === "" || display === ".") return;
+          if (previousValue === "" && display !== "") {
+            previousValue = display;
+            operation = value;
+            previousDisplayElement.textContent = display + " " + value;
+            display = "";
+          } else if (previousValue !== "" && display !== "") {
+            let result = performCalculation(
+              parseFloat(previousValue),
+              parseFloat(display),
+              operation,
+            );
+            display = result.toString();
+            previousValue = display;
+            operation = value;
+            previousDisplayElement.textContent = display + " " + value;
+            display = "";
+          }
+          updateDisplay();
+          return;
+        }
+
+        // Handle regular numbers and decimal
+        if (value === ".") {
+          if (!display.includes(".")) {
+            if (display === "") display = "0";
+            display += value;
+          }
+        } else if (value === "(" || value === ")") {
+          if (display === "0") display = value;
+          else display += value;
+        } else {
+          if (display === "0" && value !== ".") {
+            display = value;
+          } else {
+            display += value;
+          }
+        }
+
+        shouldResetDisplay = false;
+        updateDisplay();
+      }
+
+      function isOperator(value) {
+        return ["+", "-", "*", "/", "%", "^"].includes(value);
+      }
+
+      function calculate() {
+        if (display === "" || display === ".") return;
+
+        if (previousValue !== "" && operation !== null) {
+          let result = performCalculation(
+            parseFloat(previousValue),
+            parseFloat(display),
+            operation,
+          );
+          display = result.toString();
+          previousValue = "";
+          operation = null;
+          previousDisplayElement.textContent = "";
+          shouldResetDisplay = true;
+          updateDisplay();
+        }
+      }
+
+      function performCalculation(prev, current, op) {
+        switch (op) {
+          case "+":
+            return prev + current;
+          case "-":
+            return prev - current;
+          case "*":
+            return prev * current;
+          case "/":
+            return current !== 0 ? prev / current : 0;
+          case "%":
+            return prev % current;
+          case "^":
+            return Math.pow(prev, current);
+          default:
+            return current;
+        }
+      }
+
+      function clearDisplay() {
+        display = "0";
+        previousValue = "";
+        operation = null;
+        previousDisplayElement.textContent = "";
+        shouldResetDisplay = false;
+        updateDisplay();
+      }
+
+      function deleteLast() {
+        if (display.length > 1) {
+          display = display.slice(0, -1);
+        } else {
+          display = "0";
+        }
+        updateDisplay();
+      }
+
+      function toggleSign() {
+        const num = parseFloat(display);
+        display = (num * -1).toString();
+        updateDisplay();
+      }
+
+      function scientificFunction(func) {
+        let value = parseFloat(display);
+        let result;
+
+        try {
+          switch (func) {
+            case "sin":
+              result = Math.sin((value * Math.PI) / 180);
+              break;
+            case "cos":
+              result = Math.cos((value * Math.PI) / 180);
+              break;
+            case "tan":
+              result = Math.tan((value * Math.PI) / 180);
+              break;
+            case "asin":
+              result = (Math.asin(value) * 180) / Math.PI;
+              break;
+            case "acos":
+              result = (Math.acos(value) * 180) / Math.PI;
+              break;
+            case "atan":
+              result = (Math.atan(value) * 180) / Math.PI;
+              break;
+            case "log":
+              result = Math.log10(value);
+              break;
+            case "ln":
+              result = Math.log(value);
+              break;
+            case "sqrt":
+              result = Math.sqrt(value);
+              break;
+            case "cbrt":
+              result = Math.cbrt(value);
+              break;
+            case "abs":
+              result = Math.abs(value);
+              break;
+            case "factorial":
+              result = factorial(Math.round(value));
+              break;
+            case "exp":
+              result = Math.exp(value);
+              break;
+            default:
+              result = value;
+          }
+
+          display = result.toString();
+          shouldResetDisplay = true;
+          updateDisplay();
+        } catch (e) {
+          display = "Error";
+          updateDisplay();
+        }
+      }
+
+      function factorial(n) {
+        if (n < 0) return NaN;
+        if (n === 0 || n === 1) return 1;
+        if (n > 170) return Infinity;
+
+        let result = 1;
+        for (let i = 2; i <= n; i++) {
+          result *= i;
+        }
+        return result;
+      }
+
+      function openParenthesis() {
+        if (display === "0") {
+          display = "(";
+        } else {
+          display += "(";
+        }
+        updateDisplay();
+      }
+
+      // Initialize display
+      updateDisplay();
+    </script>
+  </body>
+</html>
